@@ -2,12 +2,19 @@ import numpy as np
 import rasterio
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import joblib
 import os
 from backend.utils import generate_filename, calculate_metrics, normalize_image
+
+# TensorFlow is optional - only import if available
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    print("Warning: TensorFlow not available. CNN model will be disabled.")
 
 class MLClassifier:
     def __init__(self):
@@ -100,6 +107,9 @@ class MLClassifier:
     
     def build_cnn_model(self, input_shape, num_classes):
         """Build CNN model for land cover classification"""
+        if not TENSORFLOW_AVAILABLE:
+            raise RuntimeError("TensorFlow is not available. Cannot build CNN model.")
+        
         model = keras.Sequential([
             layers.Input(shape=input_shape),
             
@@ -131,6 +141,9 @@ class MLClassifier:
     
     def train_cnn(self, image, labels):
         """Train CNN classifier"""
+        if not TENSORFLOW_AVAILABLE:
+            raise RuntimeError("TensorFlow is not available. CNN training is disabled. Use 'random_forest' instead.")
+        
         height, width, bands = image.shape
         
         # Prepare patches
@@ -231,6 +244,8 @@ class MLClassifier:
         if model_type == 'random_forest':
             metrics = self.train_random_forest(X, y)
         elif model_type == 'cnn':
+            if not TENSORFLOW_AVAILABLE:
+                raise RuntimeError("TensorFlow is not available. CNN training is disabled. Use 'random_forest' instead.")
             labels_2d = y.reshape(image.shape[0], image.shape[1])
             metrics = self.train_cnn(image, labels_2d)
         else:

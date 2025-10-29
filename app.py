@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from backend.gee_handler import GEEHandler
 from backend.ml_classifier import MLClassifier
 from backend.utils import create_directories
+from backend.report_generator import ReportGenerator
 
 load_dotenv()
 
@@ -17,6 +18,7 @@ create_directories()
 # Initialize handlers
 gee_handler = GEEHandler()
 ml_classifier = MLClassifier()
+report_generator = ReportGenerator()
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -382,12 +384,6 @@ def calculate_soil_moisture():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
-
-# Import report generator
-from backend.report_generator import ReportGenerator
-
-# Initialize report generator
-report_generator = ReportGenerator()
 
 @app.route('/api/generate-report', methods=['POST'])
 def generate_report():

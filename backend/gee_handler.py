@@ -5,21 +5,55 @@ from backend.utils import generate_filename
 
 class GEEHandler:
     def __init__(self):
-        """Initialize Google Earth Engine"""
+        """Initialize Google Earth Engine - REQUIRED for this application"""
+        self.initialized = False
+        
+        # Setup credentials from environment variable if available
+        gee_creds = os.getenv('GEE_CREDENTIALS')
+        if gee_creds:
+            creds_dir = os.path.expanduser('~/.config/earthengine')
+            os.makedirs(creds_dir, exist_ok=True)
+            creds_path = os.path.join(creds_dir, 'credentials')
+            
+            # Write credentials to file
+            with open(creds_path, 'w') as f:
+                f.write(gee_creds)
+            print("✓ GEE credentials loaded from environment variable")
+        
+        # Check for credentials file
+        creds_path = os.path.expanduser('~/.config/earthengine/credentials')
+        if not os.path.exists(creds_path):
+            print("=" * 60)
+            print("❌ ERROR: GEE credentials not found!")
+            print("=" * 60)
+            print("This application REQUIRES Google Earth Engine credentials.")
+            print("Please add GEE_CREDENTIALS environment variable.")
+            print("=" * 60)
+        
         try:
             # Try to initialize with project ID from environment
             project_id = os.getenv('GEE_PROJECT_ID', 'gleaming-tube-445109-t2')
             ee.Initialize(project=project_id)
-            print(f"✓ GEE initialized with project: {project_id}")
+            print("=" * 60)
+            print(f"✅ GEE initialized successfully!")
+            print(f"📡 Project: {project_id}")
+            print("=" * 60)
+            self.initialized = True
         except Exception as e:
-            print(f"GEE initialization error: {e}")
-            print("Run 'earthengine authenticate' to set up credentials")
-            # Try without project ID
+            print("=" * 60)
+            print(f"❌ GEE initialization FAILED: {e}")
+            print("=" * 60)
+            print("⚠️  This application will NOT work without GEE!")
+            print("⚠️  Please check GEE_CREDENTIALS and GEE_PROJECT_ID")
+            print("=" * 60)
+            # Try without project ID as fallback
             try:
                 ee.Initialize()
                 print("✓ GEE initialized without project ID")
-            except:
-                pass
+                self.initialized = True
+            except Exception as e2:
+                print(f"❌ Final attempt failed: {e2}")
+                self.initialized = False
     
     def search_location(self, location_name):
         """Search location by name and return coordinates"""

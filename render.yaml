@@ -9,11 +9,15 @@ services:
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 600 --workers 2
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.11.7
       - key: GEE_PROJECT_ID
         value: gleaming-tube-445109-t2
+      - key: GEE_CREDENTIALS
+        sync: false
       - key: PORT
         value: 5000
+      - key: FLASK_ENV
+        value: production
     healthCheckPath: /api/health
     
   # Frontend Service (Static Site)

@@ -124,8 +124,7 @@ const ControlPanel = ({ onProcess, onLocationSearch, loading }) => {
               onChange={(e) => setModelType(e.target.value)}
               className="model-select"
             >
-              <option value="random_forest">Random Forest</option>
-              <option value="cnn">CNN (Deep Learning)</option>
+              <option value="random_forest">Random Forest (ML)</option>
             </select>
           </div>
         )}
@@ -144,7 +143,7 @@ const ControlPanel = ({ onProcess, onLocationSearch, loading }) => {
         <ol>
           <li>Select area on map or search location</li>
           <li>Choose date range for satellite imagery</li>
-          <li>Select ML model (Random Forest or CNN)</li>
+          <li>Select analysis type and dataset</li>
           <li>Click Generate to start processing</li>
           <li>Download classified .tif file</li>
         </ol>

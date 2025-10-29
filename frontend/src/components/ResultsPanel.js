@@ -87,7 +87,8 @@ const ResultsPanel = ({ results }) => {
       }
       
       console.log('Downloading file:', filename);
-      const downloadUrl = `http://localhost:5000/api/download/${encodeURIComponent(filename)}`;
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const downloadUrl = `${API_URL}/api/download/${encodeURIComponent(filename)}`;
       
       // Create a temporary link and click it
       const link = document.createElement('a');

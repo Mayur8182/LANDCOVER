@@ -12,7 +12,8 @@ const RealtimeViewer = ({ sessionId, onComplete }) => {
 
   useEffect(() => {
     // Connect to WebSocket
-    const newSocket = io('http://localhost:5000');
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const newSocket = io(API_URL);
     
     newSocket.on('connect', () => {
       console.log('Connected to server');

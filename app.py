@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ except Exception as e:
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/build', static_url_path='')
 CORS(app)
 
 # Create necessary directories
@@ -498,6 +498,28 @@ def handle_join_session(data):
     session_id = data.get('session_id', 'default')
     print(f'Client {request.sid} joined session: {session_id}')
     emit('joined_session', {'session_id': session_id})
+
+
+# Serve React Frontend
+@app.route('/')
+def serve_frontend():
+    """Serve React app"""
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files"""
+    if path.startswith('api/'):
+        # Let API routes handle themselves
+        return jsonify({'error': 'Not found'}), 404
+    
+    file_path = os.path.join(app.static_folder, path)
+    if os.path.exists(file_path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        # For React Router - serve index.html for all other routes
+        return send_from_directory(app.static_folder, 'index.html')
+
 
 # Run with SocketIO
 if __name__ == '__main__':

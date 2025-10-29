@@ -5,7 +5,15 @@ from dotenv import load_dotenv
 from backend.gee_handler import GEEHandler
 from backend.ml_classifier import MLClassifier
 from backend.utils import create_directories
-from backend.report_generator import ReportGenerator
+
+# Try to import ReportGenerator (optional feature)
+try:
+    from backend.report_generator import ReportGenerator
+    REPORTS_AVAILABLE = True
+except Exception as e:
+    print(f"⚠️  ReportGenerator not available: {e}")
+    ReportGenerator = None
+    REPORTS_AVAILABLE = False
 
 load_dotenv()
 
@@ -18,7 +26,7 @@ create_directories()
 # Initialize handlers
 gee_handler = GEEHandler()
 ml_classifier = MLClassifier()
-report_generator = ReportGenerator()
+report_generator = ReportGenerator() if REPORTS_AVAILABLE else None
 
 @app.route('/api/health', methods=['GET'])
 def health_check():

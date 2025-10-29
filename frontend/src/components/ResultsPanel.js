@@ -17,7 +17,7 @@ const ResultsPanel = ({ results }) => {
     return null;
   }
 
-  const { classification, imagery, analysis } = results;
+  const { classification, imagery } = results;
   const classDistribution = classification?.classification?.class_distribution || {};
   const metrics = classification?.metrics || {};
 

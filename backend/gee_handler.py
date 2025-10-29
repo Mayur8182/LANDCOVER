@@ -153,9 +153,24 @@ class GEEHandler:
             # Select RGB and NIR bands
             image = image.select(['B4', 'B3', 'B2', 'B8'])  # Red, Green, Blue, NIR
             
+            # Calculate appropriate scale based on area size
+            area_sqkm = aoi.area().divide(1000000).getInfo()
+            
+            # Adjust scale to keep request size under 50MB
+            if area_sqkm > 100:
+                scale = 100  # Very large area
+            elif area_sqkm > 50:
+                scale = 50   # Large area
+            elif area_sqkm > 10:
+                scale = 30   # Medium area
+            else:
+                scale = 10   # Small area (original resolution)
+            
+            print(f"Sentinel-2 Area: {area_sqkm:.2f} km², using scale: {scale}m")
+            
             # Get download URL
             url = image.getDownloadURL({
-                'scale': 10,
+                'scale': scale,
                 'region': aoi,
                 'format': 'GEO_TIFF',
                 'filePerBand': False

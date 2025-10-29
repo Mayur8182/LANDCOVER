@@ -513,6 +513,13 @@ def serve_static(path):
         # Let API routes handle themselves
         return jsonify({'error': 'Not found'}), 404
     
+    # Check if it's a viewer HTML file in frontend/public
+    if path.endswith('.html'):
+        public_path = os.path.join('frontend', 'public', path)
+        if os.path.exists(public_path):
+            return send_file(public_path)
+    
+    # Check in build folder
     file_path = os.path.join(app.static_folder, path)
     if os.path.exists(file_path):
         return send_from_directory(app.static_folder, path)

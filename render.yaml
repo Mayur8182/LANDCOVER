@@ -5,11 +5,11 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: pip install --upgrade pip && pip install --only-binary=:all: -r requirements.txt || pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 600 --workers 2
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: 3.11.9
       - key: GEE_PROJECT_ID
         value: gleaming-tube-445109-t2
       - key: PORT

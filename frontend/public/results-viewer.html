@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,7 +34,7 @@
             bottom: 0;
             background: white;
             overflow-y: auto;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-content {
@@ -127,6 +128,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
     <div id="sidebar">
@@ -152,7 +154,7 @@
 
         // Initialize map
         const map = L.map('map').setView([20, 78], 5);
-        
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -187,7 +189,7 @@
         if (resultsData.classification && resultsData.classification.classification) {
             const classDist = resultsData.classification.classification.class_distribution;
             let distHTML = '<h3>Class Distribution</h3>';
-            
+
             for (const [className, count] of Object.entries(classDist)) {
                 const color = classColors[className] || '#999';
                 distHTML += `
@@ -200,7 +202,7 @@
                     </div>
                 `;
             }
-            
+
             document.getElementById('distribution').innerHTML = distHTML;
 
             // Add legend
@@ -226,4 +228,5 @@
         }
     </script>
 </body>
+
 </html>

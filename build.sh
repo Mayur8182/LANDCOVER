@@ -3,7 +3,7 @@
 set -o errexit
 
 # Install Python dependencies
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 # Create necessary directories
@@ -11,6 +11,7 @@ mkdir -p data exports models/saved_models logs reports map_tiles
 
 # Authenticate Earth Engine (if credentials available)
 if [ ! -z "$GEE_CREDENTIALS" ]; then
+    mkdir -p ~/.config/earthengine
     echo "$GEE_CREDENTIALS" > ~/.config/earthengine/credentials
 fi
 

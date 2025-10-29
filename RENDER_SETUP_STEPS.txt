@@ -1,0 +1,185 @@
+🚀 RENDER.COM DEPLOYMENT - STEP BY STEP
+
+═══════════════════════════════════════════════════════════════
+
+📋 PREREQUISITES:
+✓ GitHub account
+✓ Render.com account (free)
+✓ Your code ready
+
+═══════════════════════════════════════════════════════════════
+
+STEP 1: PUSH TO GITHUB
+═══════════════════════════════════════════════════════════════
+
+1. Create new repository on GitHub:
+   https://github.com/new
+   
+   Name: land-cover-classification
+   Description: Satellite Imagery Land Cover Classification System
+   Public or Private: Your choice
+   
+2. Copy repository URL (example):
+   https://github.com/YOUR_USERNAME/land-cover-classification.git
+
+3. Run these commands:
+   
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin YOUR_GITHUB_REPO_URL
+   git push -u origin main
+
+═══════════════════════════════════════════════════════════════
+
+STEP 2: DEPLOY ON RENDER
+═══════════════════════════════════════════════════════════════
+
+1. Go to: https://render.com/dashboard
+
+2. Click "New" → "Blueprint"
+
+3. Connect GitHub:
+   - Click "Connect GitHub"
+   - Authorize Render
+   - Select your repository
+
+4. Render will detect render.yaml and show:
+   - land-cover-backend (Web Service)
+   - land-cover-frontend (Static Site)
+
+5. Click "Apply" to create both services
+
+═══════════════════════════════════════════════════════════════
+
+STEP 3: CONFIGURE ENVIRONMENT VARIABLES
+═══════════════════════════════════════════════════════════════
+
+In Render Dashboard → land-cover-backend → Environment:
+
+Add these variables:
+
+1. GEE_PROJECT_ID
+   Value: gleaming-tube-445109-t2
+
+2. SECRET_KEY
+   Value: (generate random string)
+   Example: land-cover-secret-key-2024-production
+
+3. FLASK_ENV
+   Value: production
+
+4. GEE_CREDENTIALS (Important!)
+   Value: (see next step)
+
+═══════════════════════════════════════════════════════════════
+
+STEP 4: GET GEE CREDENTIALS
+═══════════════════════════════════════════════════════════════
+
+1. On your local machine, run:
+   earthengine authenticate
+
+2. Find credentials file:
+   Windows: %USERPROFILE%\.config\earthengine\credentials
+   Linux/Mac: ~/.config/earthengine/credentials
+
+3. Open file in text editor
+
+4. Copy ENTIRE content (JSON format)
+
+5. In Render dashboard:
+   - Add environment variable: GEE_CREDENTIALS
+   - Paste the entire JSON content as value
+
+═══════════════════════════════════════════════════════════════
+
+STEP 5: WAIT FOR DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+
+1. Render will build and deploy (5-10 minutes)
+
+2. Watch logs in dashboard:
+   - Build logs
+   - Deploy logs
+   - Runtime logs
+
+3. Wait for "Live" status
+
+═══════════════════════════════════════════════════════════════
+
+STEP 6: TEST YOUR DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+
+1. Backend URL (example):
+   https://land-cover-backend.onrender.com
+
+2. Test health check:
+   https://land-cover-backend.onrender.com/api/health
+   
+   Should return:
+   {"status": "ok", "message": "Server is running"}
+
+3. Frontend URL (example):
+   https://land-cover-frontend.onrender.com
+
+4. Open frontend and test:
+   - Select area
+   - Choose MODIS (faster)
+   - Process
+   - View results
+
+═══════════════════════════════════════════════════════════════
+
+STEP 7: UPDATE FRONTEND API URL
+═══════════════════════════════════════════════════════════════
+
+If frontend can't connect to backend:
+
+1. In Render dashboard, get backend URL
+
+2. Update frontend environment variable:
+   REACT_APP_API_URL=https://your-backend-url.onrender.com
+
+3. Redeploy frontend
+
+═══════════════════════════════════════════════════════════════
+
+✅ DEPLOYMENT COMPLETE!
+═══════════════════════════════════════════════════════════════
+
+Your URLs:
+- Backend: https://land-cover-backend.onrender.com
+- Frontend: https://land-cover-frontend.onrender.com
+
+Share with anyone! 🌍
+
+═══════════════════════════════════════════════════════════════
+
+📝 IMPORTANT NOTES:
+═══════════════════════════════════════════════════════════════
+
+1. FREE TIER LIMITATIONS:
+   - Backend spins down after 15 min inactivity
+   - First request takes 30-60 seconds to wake up
+   - 512 MB RAM (use MODIS for large areas)
+   - Ephemeral storage (files deleted on restart)
+
+2. FOR PRODUCTION:
+   - Upgrade to Starter plan ($7/month)
+   - Add cloud storage (S3, GCS)
+   - Use Redis for caching
+   - Monitor usage and costs
+
+3. MAINTENANCE:
+   - Check logs regularly
+   - Monitor error rates
+   - Update dependencies
+   - Backup important data
+
+═══════════════════════════════════════════════════════════════
+
+Need help? Check DEPLOYMENT_RENDER.md for detailed guide!
+
+═══════════════════════════════════════════════════════════════

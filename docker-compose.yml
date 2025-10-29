@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY}
+      - GEE_PROJECT_ID=${GEE_PROJECT_ID}
+    volumes:
+      - ./data:/app/data
+      - ./exports:/app/exports
+      - ./models/saved_models:/app/models/saved_models
+      - ./logs:/app/logs
+      - ~/.config/earthengine:/root/.config/earthengine:ro
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  data:
+  exports:
+  models:
+  logs:

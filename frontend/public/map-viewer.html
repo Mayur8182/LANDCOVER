@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Cover Map Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 350px;
+            bottom: 0;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 350px;
+            bottom: 0;
+            background: white;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .legend-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin-right: 12px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .legend-label {
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .control-item {
+            margin-bottom: 15px;
+        }
+
+        .control-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .opacity-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                right: 0;
+                bottom: 50%;
+            }
+
+            #sidebar {
+                top: 50%;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading classification map...</p>
+    </div>
+
+    <div id="map"></div>
+    
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1>🗺️ Land Cover Map</h1>
+            <p>Interactive Classification Viewer</p>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="section controls">
+                <h3>🎨 Display Controls</h3>
+                <div class="control-item">
+                    <label>
+                        Opacity: <span class="opacity-value" id="opacity-value">70%</span>
+                    </label>
+                    <input type="range" min="0" max="100" value="70" class="slider" id="opacity-slider">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Legend</h3>
+                <div id="legend-container"></div>
+            </div>
+
+            <div class="section">
+                <h3>📥 Actions</h3>
+                <button class="download-btn" onclick="downloadFile()">
+                    ⬇️ Download GeoTIFF
+                </button>
+                <button class="download-btn" style="background: #3498db;" onclick="downloadPNG()">
+                    📸 Download PNG
+                </button>
+            </div>
+
+            <div class="info-box">
+                <p><strong>💡 Tips:</strong></p>
+                <p>• Zoom in/out with mouse wheel</p>
+                <p>• Pan by dragging the map</p>
+                <p>• Adjust opacity to see base map</p>
+                <p>• Click legend items to toggle layers</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Get filename from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const filename = urlParams.get('file');
+
+        if (!filename) {
+            alert('No file specified!');
+            document.getElementById('loading').innerHTML = '<p>Error: No file specified</p>';
+        }
+
+        // Initialize map
+        const map = L.map('map').setView([20, 78], 5);
+        
+        // Add base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Class colors and names
+        const classInfo = {
+            'Water': { color: '#3498db', id: 0 },
+            'Forest': { color: '#27ae60', id: 1 },
+            'Grassland': { color: '#2ecc71', id: 2 },
+            'Urban': { color: '#e74c3c', id: 3 },
+            'Barren': { color: '#95a5a6', id: 4 },
+            'Agriculture': { color: '#f39c12', id: 5 }
+        };
+
+        let imageOverlay = null;
+
+        // Load image bounds and overlay
+        async function loadMap() {
+            try {
+                console.log('Loading map for file:', filename);
+                
+                // Get bounds
+                const boundsUrl = `http://localhost:5000/api/get-image-bounds/${encodeURIComponent(filename)}`;
+                console.log('Fetching bounds from:', boundsUrl);
+                
+                const boundsResponse = await fetch(boundsUrl);
+                
+                if (!boundsResponse.ok) {
+                    throw new Error(`HTTP error! status: ${boundsResponse.status}`);
+                }
+                
+                const boundsData = await boundsResponse.json();
+                console.log('Bounds data:', boundsData);
+                
+                if (!boundsData.success) {
+                    throw new Error(boundsData.error || 'Failed to get bounds');
+                }
+
+                const bounds = boundsData.bounds;
+                const leafletBounds = [
+                    [bounds.south, bounds.west],
+                    [bounds.north, bounds.east]
+                ];
+
+                console.log('Leaflet bounds:', leafletBounds);
+
+                // Add image overlay
+                const imageUrl = `http://localhost:5000/api/get-map-tiles/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                console.log('Loading image from:', imageUrl);
+                
+                imageOverlay = L.imageOverlay(imageUrl, leafletBounds, {
+                    opacity: 0.7,
+                    interactive: false
+                });
+                
+                imageOverlay.on('load', function() {
+                    console.log('Image loaded successfully');
+                });
+                
+                imageOverlay.on('error', function(e) {
+                    console.error('Image load error:', e);
+                    alert('Error loading classification image. Please check if the file exists.');
+                });
+                
+                imageOverlay.addTo(map);
+
+                // Fit map to bounds
+                map.fitBounds(leafletBounds);
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+
+                // Create legend
+                createLegend();
+
+            } catch (error) {
+                console.error('Error loading map:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="padding: 20px;">
+                        <p style="color: red; margin-bottom: 10px;">❌ Error loading map</p>
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">${error.message}</p>
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">File: ${filename}</p>
+                        <button onclick="location.reload()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔄 Retry
+                        </button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                            ✕ Close
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Create legend
+        function createLegend() {
+            const container = document.getElementById('legend-container');
+            let html = '';
+
+            for (const [className, info] of Object.entries(classInfo)) {
+                html += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: ${info.color};"></div>
+                        <span class="legend-label">${className}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Opacity control
+        document.getElementById('opacity-slider').addEventListener('input', function(e) {
+            const opacity = e.target.value / 100;
+            document.getElementById('opacity-value').textContent = e.target.value + '%';
+            if (imageOverlay) {
+                imageOverlay.setOpacity(opacity);
+            }
+        });
+
+        // Download functions
+        function downloadFile() {
+            const url = `http://localhost:5000/api/download/${encodeURIComponent(filename)}`;
+            console.log('Downloading from:', url);
+            window.open(url, '_blank');
+        }
+
+        function downloadPNG() {
+            const url = `http://localhost:5000/api/get-map-tiles/${encodeURIComponent(filename)}`;
+            console.log('Downloading PNG from:', url);
+            window.open(url, '_blank');
+        }
+
+        // Load map on page load
+        loadMap();
+    </script>
+</body>
+</html>

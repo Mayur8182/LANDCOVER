@@ -1,0 +1,232 @@
+.realtime-viewer {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.viewer-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.session-id {
+  font-size: 0.9rem;
+  color: #666;
+  background: #f5f5f5;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.current-stage {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.stage-icon {
+  font-size: 3rem;
+}
+
+.stage-info {
+  flex: 1;
+}
+
+.stage-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 30px;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 5px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 15px;
+}
+
+.progress-text {
+  text-align: right;
+  font-weight: bold;
+  color: #666;
+}
+
+.progress-log {
+  margin-top: 20px;
+}
+
+.progress-log h3 {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.log-entries {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 5px;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: transform 0.2s;
+}
+
+.log-entry:hover {
+  transform: translateX(5px);
+}
+
+.log-icon {
+  font-size: 1.2rem;
+}
+
+.log-stage {
+  font-weight: bold;
+  color: #667eea;
+  min-width: 100px;
+}
+
+.log-progress {
+  font-weight: bold;
+  color: #27ae60;
+  min-width: 40px;
+}
+
+.log-message {
+  flex: 1;
+  color: #666;
+}
+
+.log-time {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.completion-summary {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+}
+
+.completion-summary h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 5px;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.class-distribution {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.class-distribution h4 {
+  margin-bottom: 10px;
+}
+
+.class-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  margin-bottom: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.class-name {
+  font-weight: 500;
+}
+
+.class-count {
+  opacity: 0.9;
+}
+
+.view-map-btn {
+  width: 100%;
+  padding: 15px;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.view-map-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.log-entry:last-child {
+  animation: pulse 1s ease-in-out;
+}

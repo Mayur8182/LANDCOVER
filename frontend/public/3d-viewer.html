@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Land Cover Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 350px;
+            bottom: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 350px;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            box-shadow: -2px 0 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .control-item {
+            margin-bottom: 15px;
+        }
+
+        .control-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .legend-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin-right: 12px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .view-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .view-mode-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .view-mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading 3D visualization...</p>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h1>🌍 3D Land Cover Viewer</h1>
+            <p>Interactive 3D Visualization</p>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="view-mode-toggle">
+                <button class="view-mode-btn active" onclick="setViewMode('2d')">
+                    🗺️ 2D Map
+                </button>
+                <button class="view-mode-btn" onclick="setViewMode('3d')">
+                    🌍 3D Globe
+                </button>
+            </div>
+
+            <div class="section">
+                <h3>🎨 Display Controls</h3>
+                
+                <div class="control-item">
+                    <label>
+                        Opacity: <span class="value-display" id="opacity-value">70%</span>
+                    </label>
+                    <input type="range" min="0" max="100" value="70" class="slider" id="opacity-slider">
+                </div>
+
+                <div class="control-item">
+                    <label>
+                        Tilt: <span class="value-display" id="tilt-value">0°</span>
+                    </label>
+                    <input type="range" min="0" max="60" value="0" class="slider" id="tilt-slider">
+                </div>
+
+                <div class="control-item">
+                    <label>
+                        Rotation: <span class="value-display" id="rotation-value">0°</span>
+                    </label>
+                    <input type="range" min="0" max="360" value="0" class="slider" id="rotation-slider">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Statistics</h3>
+                <div class="stats-card">
+                    <div class="stats-label">Total Area</div>
+                    <div class="stats-value" id="total-area">Calculating...</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Legend</h3>
+                <div id="legend-container"></div>
+            </div>
+
+            <div class="section">
+                <h3>📥 Actions</h3>
+                <button class="btn btn-success" onclick="downloadFile()">
+                    ⬇️ Download GeoTIFF
+                </button>
+                <button class="btn btn-primary" onclick="downloadPNG()">
+                    📸 Download PNG
+                </button>
+                <button class="btn btn-primary" onclick="resetView()">
+                    🔄 Reset View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const filename = urlParams.get('file');
+
+        if (!filename) {
+            alert('No file specified!');
+        }
+
+        let map, imageOverlay, initialBounds;
+        let currentTilt = 0;
+        let currentRotation = 0;
+
+        // Initialize map
+        map = L.map('map', {
+            center: [20, 78],
+            zoom: 5,
+            zoomControl: true,
+            attributionControl: true
+        });
+        
+        // Add satellite base layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Class colors
+        const classInfo = {
+            'Water': { color: '#3498db' },
+            'Forest': { color: '#27ae60' },
+            'Grassland': { color: '#2ecc71' },
+            'Urban': { color: '#e74c3c' },
+            'Barren': { color: '#95a5a6' },
+            'Agriculture': { color: '#f39c12' }
+        };
+
+        async function loadMap() {
+            try {
+                console.log('Loading 3D view for:', filename);
+                
+                const boundsUrl = `http://localhost:5000/api/get-image-bounds/${encodeURIComponent(filename)}`;
+                const boundsResponse = await fetch(boundsUrl);
+                
+                if (!boundsResponse.ok) {
+                    throw new Error(`HTTP error! status: ${boundsResponse.status}`);
+                }
+                
+                const boundsData = await boundsResponse.json();
+                
+                if (!boundsData.success) {
+                    throw new Error(boundsData.error);
+                }
+
+                const bounds = boundsData.bounds;
+                initialBounds = [
+                    [bounds.south, bounds.west],
+                    [bounds.north, bounds.east]
+                ];
+
+                // Calculate area
+                const latDiff = bounds.north - bounds.south;
+                const lonDiff = bounds.east - bounds.west;
+                const area = (latDiff * 111) * (lonDiff * 111 * Math.cos(bounds.south * Math.PI / 180));
+                document.getElementById('total-area').textContent = area.toFixed(2) + ' km²';
+
+                const imageUrl = `http://localhost:5000/api/get-map-tiles/${encodeURIComponent(filename)}?t=${Date.now()}`;
+                
+                imageOverlay = L.imageOverlay(imageUrl, initialBounds, {
+                    opacity: 0.7,
+                    interactive: false
+                }).addTo(map);
+
+                map.fitBounds(initialBounds);
+                document.getElementById('loading').style.display = 'none';
+                createLegend();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="padding: 20px;">
+                        <p style="color: red; margin-bottom: 10px;">❌ Error loading 3D view</p>
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">${error.message}</p>
+                        <button onclick="location.reload()" class="btn btn-primary">🔄 Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function createLegend() {
+            const container = document.getElementById('legend-container');
+            let html = '';
+            for (const [className, info] of Object.entries(classInfo)) {
+                html += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: ${info.color};"></div>
+                        <span>${className}</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function setViewMode(mode) {
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            if (mode === '3d') {
+                // Apply 3D-like perspective
+                document.getElementById('map').style.transform = 'perspective(1000px) rotateX(30deg)';
+            } else {
+                document.getElementById('map').style.transform = 'none';
+            }
+        }
+
+        // Controls
+        document.getElementById('opacity-slider').addEventListener('input', function(e) {
+            const opacity = e.target.value / 100;
+            document.getElementById('opacity-value').textContent = e.target.value + '%';
+            if (imageOverlay) imageOverlay.setOpacity(opacity);
+        });
+
+        document.getElementById('tilt-slider').addEventListener('input', function(e) {
+            currentTilt = e.target.value;
+            document.getElementById('tilt-value').textContent = e.target.value + '°';
+            updateMapTransform();
+        });
+
+        document.getElementById('rotation-slider').addEventListener('input', function(e) {
+            currentRotation = e.target.value;
+            document.getElementById('rotation-value').textContent = e.target.value + '°';
+            updateMapTransform();
+        });
+
+        function updateMapTransform() {
+            const mapEl = document.getElementById('map');
+            mapEl.style.transform = `perspective(1500px) rotateX(${currentTilt}deg) rotateZ(${currentRotation}deg)`;
+            mapEl.style.transformStyle = 'preserve-3d';
+        }
+
+        function resetView() {
+            if (initialBounds) {
+                map.fitBounds(initialBounds);
+            }
+            document.getElementById('opacity-slider').value = 70;
+            document.getElementById('tilt-slider').value = 0;
+            document.getElementById('rotation-slider').value = 0;
+            document.getElementById('opacity-value').textContent = '70%';
+            document.getElementById('tilt-value').textContent = '0°';
+            document.getElementById('rotation-value').textContent = '0°';
+            document.getElementById('map').style.transform = 'none';
+            if (imageOverlay) imageOverlay.setOpacity(0.7);
+        }
+
+        function downloadFile() {
+            window.open(`http://localhost:5000/api/download/${encodeURIComponent(filename)}`, '_blank');
+        }
+
+        function downloadPNG() {
+            window.open(`http://localhost:5000/api/get-map-tiles/${encodeURIComponent(filename)}`, '_blank');
+        }
+
+        loadMap();
+    </script>
+</body>
+</html>

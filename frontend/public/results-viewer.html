@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Land Cover Classification</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 400px;
+            bottom: 0;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 400px;
+            bottom: 0;
+            background: white;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .class-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .class-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .legend {
+            margin-top: 20px;
+        }
+
+        .legend h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            background: #229954;
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                right: 0;
+                bottom: 50%;
+            }
+
+            #sidebar {
+                top: 50%;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="sidebar">
+        <div class="sidebar-content">
+            <h1>🗺️ Analysis Results</h1>
+            <div id="metrics"></div>
+            <div id="distribution"></div>
+            <div class="legend">
+                <h3>Legend</h3>
+                <div id="legend-items"></div>
+            </div>
+            <button class="download-btn" onclick="downloadResults()">
+                ⬇️ Download Results
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Get results from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultsData = JSON.parse(decodeURIComponent(urlParams.get('data') || '{}'));
+
+        // Initialize map
+        const map = L.map('map').setView([20, 78], 5);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Class colors
+        const classColors = {
+            'Water': '#3498db',
+            'Forest': '#27ae60',
+            'Grassland': '#2ecc71',
+            'Urban': '#e74c3c',
+            'Barren': '#95a5a6',
+            'Agriculture': '#f39c12'
+        };
+
+        // Display metrics
+        if (resultsData.classification && resultsData.classification.metrics) {
+            const metrics = resultsData.classification.metrics;
+            const metricsHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value">${(metrics.accuracy * 100).toFixed(1)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">F1 Score</div>
+                    <div class="metric-value">${(metrics.f1_score * 100).toFixed(1)}%</div>
+                </div>
+            `;
+            document.getElementById('metrics').innerHTML = metricsHTML;
+        }
+
+        // Display class distribution
+        if (resultsData.classification && resultsData.classification.classification) {
+            const classDist = resultsData.classification.classification.class_distribution;
+            let distHTML = '<h3>Class Distribution</h3>';
+            
+            for (const [className, count] of Object.entries(classDist)) {
+                const color = classColors[className] || '#999';
+                distHTML += `
+                    <div class="class-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="class-color" style="background: ${color};"></div>
+                            <span>${className}</span>
+                        </div>
+                        <strong>${count.toLocaleString()}</strong>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('distribution').innerHTML = distHTML;
+
+            // Add legend
+            let legendHTML = '';
+            for (const [className, count] of Object.entries(classDist)) {
+                const color = classColors[className] || '#999';
+                legendHTML += `
+                    <div class="legend-item">
+                        <div class="class-color" style="background: ${color};"></div>
+                        <span>${className}</span>
+                    </div>
+                `;
+            }
+            document.getElementById('legend-items').innerHTML = legendHTML;
+        }
+
+        function downloadResults() {
+            const outputPath = resultsData.classification?.classification?.output_path || resultsData.export_path;
+            if (outputPath) {
+                const filename = outputPath.split('/').pop();
+                window.open(`http://localhost:5000/api/download/${filename}`, '_blank');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+.map-selector {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.leaflet-draw-toolbar a {
+  background-color: #fff;
+}
+
+.leaflet-draw-actions {
+  background-color: #fff;
+}
